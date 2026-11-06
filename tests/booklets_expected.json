@@ -1,0 +1,58 @@
+{
+  "friday": [
+    "Candle Lighting",
+    "Keri'at Shema (Arvit)",
+    "Shalom Aleikhem",
+    "Blessing the Children",
+    "Mizmor LeDavid (Psalm 23)",
+    "Kiddush (Friday Night)",
+    "Netilat Yadayim",
+    "Einei Khol and HaMotzi",
+    "Birkat HaMazon"
+  ],
+  "havdalah": [
+    "Havdalah"
+  ],
+  "kaddish": [
+    "Aleinu",
+    "Mourner's Kaddish (Kaddish Yatom)"
+  ],
+  "daily": [
+    "Modeh Ani (on waking)",
+    "Asher Yatzar (after using the restroom)",
+    "Blessings Before Food",
+    "Shehecheyanu",
+    "Tefilat HaDerekh (traveler's prayer)"
+  ],
+  "mitzvot": [
+    "Putting on Tzitzit (Tallit)",
+    "Putting on Tefillin",
+    "Mikvah — Women (Tevilat Niddah)",
+    "Mikvah — Men"
+  ],
+  "pesukei": [
+    "Baruch SheAmar",
+    "Ashrei (Psalm 145)",
+    "Psalm 150",
+    "Yishtabach"
+  ],
+  "tikkun": [
+    "Tikkun HaKlali: Psalm 16",
+    "Tikkun HaKlali: Psalm 32",
+    "Tikkun HaKlali: Psalm 41",
+    "Tikkun HaKlali: Psalm 42",
+    "Tikkun HaKlali: Psalm 59",
+    "Tikkun HaKlali: Psalm 77",
+    "Tikkun HaKlali: Psalm 90",
+    "Tikkun HaKlali: Psalm 105",
+    "Tikkun HaKlali: Psalm 137",
+    "Tikkun HaKlali: Psalm 150"
+  ],
+  "day": [
+    "Netilat Yadayim",
+    "Einei Khol and HaMotzi",
+    "Birkat HaMazon",
+    "Kiddush for Shabbat Day (short form)",
+    "Psalm 126"
+  ]
+}
