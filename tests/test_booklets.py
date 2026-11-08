@@ -49,6 +49,21 @@ class Booklets(unittest.TestCase):
             if "decodeURIComponent(" in line:
                 self.assertIn("try {", line, "decodeURIComponent must sit inside try/catch")
 
+    def test_audio_wired_up(self):
+        # each recording: file on disk, a length in the DUR table, and the "Audio" badge on its section
+        dur = re.search(r"var DUR = \{([^}]*)\}", HTML).group(1)
+        used = set()
+        for m in re.finditer(r'<section class="prayer[^"]*"[^>]*>(.*?)</section>', HTML, re.S):
+            body = m.group(1)
+            srcs = re.findall(r'<audio [^>]*src="audio/([a-z0-9-]+)\.mp3"', body)
+            self.assertEqual(bool(srcs), 'class="aud"' in body, "Audio badge and player must go together")
+            for key in srcs:
+                used.add(key)
+                self.assertTrue(os.path.exists(os.path.join(ROOT, "audio", key + ".mp3")), key + ".mp3 missing")
+                self.assertIn("'%s':" % key, dur, key + " missing from DUR")
+        on_disk = {f[:-4] for f in os.listdir(os.path.join(ROOT, "audio")) if f.endswith(".mp3")}
+        self.assertEqual(on_disk - used, set(), "audio files not used by any section")
+
     def test_fonts_are_local(self):
         self.assertFalse("fonts.googleapis.com" in HTML)
         self.assertFalse("fonts.gstatic.com" in HTML)
