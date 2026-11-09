@@ -64,6 +64,17 @@ class Booklets(unittest.TestCase):
         on_disk = {f[:-4] for f in os.listdir(os.path.join(ROOT, "audio")) if f.endswith(".mp3")}
         self.assertEqual(on_disk - used, set(), "audio files not used by any section")
 
+    def test_card_shortens_divine_name(self):
+        # share cards show the Name as ה׳, never spelled out; runs the page's own regex in node
+        import shutil, subprocess
+        if not shutil.which("node"):
+            self.skipTest("node not installed")
+        js = re.search(r"  var NAME = .*?\n  function shortName.*?\n", HTML, re.S).group(0)
+        cases = ["בָּרוּךְ אַתָּה יְהֹוָה אֱלֹהֵינוּ", "הוֹדוּ לַיהֹוָה כִּי טוֹב", "אֲדֹנָי יֱהֹוִה מִבְטַחִי", "(יְהֹוָה)"]
+        out = subprocess.run(["node", "-e", js + "process.stdout.write(JSON.stringify(%s.map(shortName)))" % json.dumps(cases)],
+                             capture_output=True, text=True, check=True).stdout
+        self.assertEqual(json.loads(out), ["בָּרוּךְ אַתָּה ה׳ אֱלֹהֵינוּ", "הוֹדוּ לַה׳ כִּי טוֹב", "אֲדֹנָי ה׳ מִבְטַחִי", "(ה׳)"])
+
     def test_fonts_are_local(self):
         self.assertFalse("fonts.googleapis.com" in HTML)
         self.assertFalse("fonts.gstatic.com" in HTML)

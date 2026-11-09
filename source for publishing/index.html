@@ -275,6 +275,8 @@ p.note.saidfor{ color:var(--candle-text); }
 .pfoot .pnext{ margin-left:auto; display:inline-flex; align-items:center; gap:.5rem; max-width:100%; text-align:left; font-family:var(--ui); font-size:1rem; font-weight:600; color:var(--tekhelet); background:var(--tekhelet-soft); border:1px solid transparent; border-radius:8px; padding:.5rem .9rem; min-height:2.75rem; cursor:pointer; }
 .pfoot .pnext::after{ content:""; flex:none; width:1.05em; height:1.05em; background:currentColor; -webkit-mask:var(--ic-next) center/contain no-repeat; mask:var(--ic-next) center/contain no-repeat; }
 .pfoot button:focus-visible{ outline:3px solid var(--candle); outline-offset:2px; }
+.pfoot .pshare{ display:inline-flex; align-items:center; gap:.45rem; font-family:var(--ui); font-size:1rem; font-weight:600; color:var(--tekhelet); background:transparent; border:1px solid var(--line); border-radius:8px; padding:.45rem .9rem; min-height:2.75rem; cursor:pointer; }
+.pfoot .pshare::before{ content:""; flex:none; width:1.05em; height:1.05em; background:currentColor; -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='18' cy='5' r='3'/%3E%3Ccircle cx='6' cy='12' r='3'/%3E%3Ccircle cx='18' cy='19' r='3'/%3E%3Cpath d='M8.6 13.5l6.8 4M15.4 6.5l-6.8 4'/%3E%3C/svg%3E") center/contain no-repeat; mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='18' cy='5' r='3'/%3E%3Ccircle cx='6' cy='12' r='3'/%3E%3Ccircle cx='18' cy='19' r='3'/%3E%3Cpath d='M8.6 13.5l6.8 4M15.4 6.5l-6.8 4'/%3E%3C/svg%3E") center/contain no-repeat; }
 
 /* cross-references inside Tehillim: links, not prayers */
 .xref{ background:none; border:0; border-radius:0; margin:0 0 .5rem; }
@@ -1340,5 +1342,103 @@ a.linkbtn{ display:inline-flex; align-items:center; }
   }
   window.addEventListener('scroll', function(){ if(!ticking){ ticking = true; requestAnimationFrame(where); } }, { passive:true });
   where();
+
+  /* share card: the prayer's opening line drawn as a 1080 x 1350 image, shared or saved */
+  var SITE = 'https://mizrahi-prayers.netlify.app';   /* change here once the domain is bought */
+  var GOLD = '#A67B12', GOLDTXT = '#7E5A0C', INK = '#221E33', MUTED = '#5E5A5C';
+  /* the Divine Name in any form (with or without a one-letter prefix) is shown as ה׳ on cards */
+  var NAME = /(^|[\s(])([א-ת][֑-ׇ]*)?י[֑-ׇ]*ה[֑-ׇ]*ו[֑-ׇ]*ה[֑-ׇ]*(?![א-ת])/g;
+  function shortName(t){ return t.replace(NAME, function(m, lead, pre){ return lead + (pre || '') + 'ה׳'; }); }
+  function wrap(ctx, text, maxW){
+    var lines = [], cur = '';
+    text.split(/\s+/).forEach(function(w){ var t = cur ? cur + ' ' + w : w; if(cur && ctx.measureText(t).width > maxW){ lines.push(cur); cur = w; } else cur = t; });
+    if(cur) lines.push(cur); return lines;
+  }
+  /* largest size that fits in maxLines; at the smallest size, cut with an ellipsis */
+  function fit(ctx, text, font, sizes, maxW, maxLines){
+    for(var i = 0; i < sizes.length; i++){
+      ctx.font = font.replace('#', sizes[i]); var lines = wrap(ctx, text, maxW);
+      if(lines.length <= maxLines || i === sizes.length - 1){
+        if(lines.length > maxLines){ lines = lines.slice(0, maxLines); var last = lines[maxLines - 1];
+          while(last.indexOf(' ') > 0 && ctx.measureText(last + ' …').width > maxW) last = last.slice(0, last.lastIndexOf(' '));
+          lines[maxLines - 1] = last.replace(/[,.;:]+$/, '') + ' …'; }
+        return { lines: lines, size: sizes[i], font: ctx.font };
+      }
+    }
+  }
+  function drawCard(sec){
+    var W = 1080, H = 1350, c = document.createElement('canvas'); c.width = W; c.height = H;
+    var x = c.getContext('2d'), cx = W / 2;
+    var he = shortName(sec.querySelector('p.he').textContent.trim());
+    var enEl = sec.querySelector('p.en'), en = enEl ? enEl.textContent.trim() : '';
+    var g = sec.closest('.group'), ghe = g && g.querySelector('.ghe');
+    x.fillStyle = '#F8F3E8'; x.fillRect(0, 0, W, H);
+    x.strokeStyle = GOLD; x.lineWidth = 4; x.strokeRect(30, 30, W - 60, H - 60);
+    x.lineWidth = 2; x.strokeRect(48, 48, W - 96, H - 96);
+    var bandTop = 1050;
+    x.fillStyle = '#F1E7D1'; x.fillRect(49, bandTop, W - 98, H - 49 - bandTop);
+    x.fillStyle = GOLD; x.fillRect(49, bandTop, W - 98, 2);
+    x.textAlign = 'center'; x.textBaseline = 'alphabetic';
+    if('letterSpacing' in x) x.letterSpacing = '6px';
+    var t = fit(x, (sec.dataset.title || '').toUpperCase(), '500 #px Literata, Georgia, serif', [30, 26, 22], W - 220, 1);
+    x.font = t.font; x.fillStyle = GOLDTXT; x.fillText(t.lines[0], cx, 140);
+    if('letterSpacing' in x) x.letterSpacing = '0px';
+    if(ghe){ x.direction = 'rtl'; x.font = '400 34px "Noto Serif Hebrew", serif'; x.fillText(ghe.textContent.trim(), cx, 196); x.direction = 'ltr'; }
+    x.fillStyle = GOLD; x.fillRect(cx - 40, 232, 80, 2);
+    /* opening line, Hebrew then English, centred between the rule and the band */
+    x.direction = 'rtl';
+    var h = fit(x, he, '400 #px "Noto Serif Hebrew", serif', [78, 70, 62, 56, 50, 44], W - 220, 5); var hl = h.size * 1.65;
+    x.direction = 'ltr';
+    var e = en ? fit(x, en, '400 #px Literata, Georgia, serif', [38, 34, 30, 27], W - 240, 4) : null; var el = e ? e.size * 1.5 : 0;
+    var block = h.lines.length * hl + (e ? 44 + e.lines.length * el : 0);
+    var y = 250 + Math.max(0, (bandTop - 250 - block) / 2);
+    x.fillStyle = INK; x.direction = 'rtl'; x.font = h.font;
+    h.lines.forEach(function(l, i){ x.fillText(l, cx, y + hl * (i + 0.72)); });
+    x.direction = 'ltr';
+    if(e){ y += h.lines.length * hl + 44; x.fillStyle = MUTED; x.font = e.font; e.lines.forEach(function(l, i){ x.fillText(l, cx, y + el * (i + 0.75)); }); }
+    /* address band */
+    var d = fit(x, SITE.replace(/^https?:\/\//, ''), '500 #px Literata, Georgia, serif', [64, 56, 48, 42], W - 200, 1);
+    x.fillStyle = INK; x.font = d.font; x.fillText(d.lines[0], cx, bandTop + 108);
+    if('letterSpacing' in x) x.letterSpacing = '5px';
+    x.fillStyle = GOLDTXT; x.font = '400 28px Literata, Georgia, serif';
+    x.fillText('READ AND LISTEN · HEBREW,', cx, bandTop + 170); x.fillText('TRANSLITERATION, ENGLISH', cx, bandTop + 214);
+    if('letterSpacing' in x) x.letterSpacing = '0px';
+    return c;
+  }
+  var cardFonts = null;
+  function fontsReady(){
+    if(!cardFonts) cardFonts = (document.fonts && document.fonts.load) ? Promise.all([
+      document.fonts.load('400 40px "Noto Serif Hebrew"', 'א'), document.fonts.load('400 30px Literata'), document.fonts.load('500 30px Literata')
+    ]).catch(function(){}) : Promise.resolve();
+    return cardFonts;
+  }
+  document.querySelectorAll('.prayer').forEach(function(sec){
+    var foot = sec.querySelector('.pfoot'), shut = foot && foot.querySelector('.pshut');
+    if(!shut || !sec.querySelector('p.he')) return;
+    var btn = document.createElement('button'); btn.type = 'button'; btn.className = 'pshare'; btn.textContent = 'Share card';
+    btn.setAttribute('aria-label', 'Share ' + (sec.dataset.title || 'this prayer') + ' as a card');
+    shut.parentNode.insertBefore(btn, shut.nextSibling);
+    btn.addEventListener('click', function(){
+      if(btn.getAttribute('aria-busy') === 'true') return;
+      btn.setAttribute('aria-busy', 'true'); btn.textContent = 'Preparing…';
+      function done(msg){ btn.removeAttribute('aria-busy'); btn.textContent = 'Share card'; if(msg) say2(msg); }
+      fontsReady().then(function(){
+        drawCard(sec).toBlob(function(blob){
+          if(!blob){ done('Could not make the card.'); return; }
+          var title = sec.dataset.title || 'Prayer', link = SITE + '/#' + sec.id;
+          var name = title.replace(/[^\w]+/g, '-').replace(/^-|-$/g, '').toLowerCase() + '.png';
+          function save(){
+            var a = document.createElement('a'), u = URL.createObjectURL(blob); a.href = u; a.download = name;
+            document.body.appendChild(a); a.click(); a.remove(); setTimeout(function(){ URL.revokeObjectURL(u); }, 4000);
+            done('Card saved.');
+          }
+          var file = window.File ? new File([blob], name, { type:'image/png' }) : null;
+          if(file && navigator.canShare && navigator.canShare({ files:[file] })){
+            navigator.share({ files:[file], title: title, text: title + ' — ' + link }).then(function(){ done(''); }, function(err){ if(err && err.name === 'AbortError') done(''); else save(); });
+          } else save();
+        }, 'image/png');
+      });
+    });
+  });
 })();
 </script>
